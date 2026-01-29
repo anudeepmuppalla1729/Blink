@@ -1,0 +1,20 @@
+{
+  "name": "blink",
+  "version": "1.0.0",
+  "description": "Wifi Based Private Data and Message Sharing System",
+  "homepage": "https://github.com/Sreeyatarimela58/Blink#readme",
+  "bugs": {
+    "url": "https://github.com/Sreeyatarimela58/Blink/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sreeyatarimela58/Blink.git"
+  },
+  "license": "ISC",
+  "author": "Chandler and Monica.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "dev"
+  }
+}
