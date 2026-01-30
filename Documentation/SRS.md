@@ -17,11 +17,11 @@ This SRS serves as a reference for developers, testers, reviewers, and stakehold
 
 ### **1.2 Document Conventions**
 
-* **Shall** – Mandatory requirement
-* **Should** – Recommended but optional
-* **May** – Optional feature
-* All requirements are numbered for traceability
-* Technical terms are used consistently throughout the document
+- **Shall** – Mandatory requirement
+- **Should** – Recommended but optional
+- **May** – Optional feature
+- All requirements are numbered for traceability
+- Technical terms are used consistently throughout the document
 
 ---
 
@@ -29,10 +29,10 @@ This SRS serves as a reference for developers, testers, reviewers, and stakehold
 
 The system enables users connected to the **same Wi-Fi network** to:
 
-* Discover other users using the application
-* Request and establish temporary chat sessions
-* Exchange messages and files securely
-* Automatically destroy all shared data once the session ends or Wi-Fi disconnects
+- Discover other users using the application
+- Request and establish temporary chat sessions
+- Exchange messages and files securely
+- Automatically destroy all shared data once the session ends or Wi-Fi disconnects
 
 The system **does not store messages or files permanently** and avoids cloud-based data persistence to ensure privacy.
 
@@ -40,10 +40,10 @@ The system **does not store messages or files permanently** and avoids cloud-bas
 
 ### **1.4 References**
 
-* WebRTC W3C Specification
-* RFC 6455 – WebSocket Protocol
-* OWASP Web Application Security Guidelines
-* IEEE 830 / ISO/IEC 29148 SRS Standard
+- WebRTC W3C Specification
+- RFC 6455 – WebSocket Protocol
+- OWASP Web Application Security Guidelines
+- IEEE 830 / ISO/IEC 29148 SRS Standard
 
 ---
 
@@ -51,9 +51,9 @@ The system **does not store messages or files permanently** and avoids cloud-bas
 
 The system is a **browser-based web application** that uses:
 
-* A backend server for **authentication, presence management, and signaling**
-* **Peer-to-peer communication (WebRTC)** for messaging and file sharing
-* A relational database only for **user authentication data**
+- A backend server for **authentication, presence management, and signaling**
+- **Peer-to-peer communication (WebRTC)** for messaging and file sharing
+- A **NoSQL database (MongoDB)** only for **user authentication data**
 
 All chat sessions are **temporary** and limited to the duration of shared Wi-Fi connectivity.
 
@@ -85,24 +85,28 @@ The system shall enable real-time messaging during an active chat session.
 
 The system shall allow users to share files during an active session.
 
+### **FR-5.1:** File Progress Display
+
+The system shall display a visual progress bar indicating the percentage of file transfer completed for both sender and receiver.
+
 ### **FR-6:** Automatic Data Deletion
 
 The system shall delete all messages and files when:
 
-* Wi-Fi disconnects
-* Any user ends the chat
-* The browser session ends
+- Wi-Fi disconnects
+- Any user ends the chat
+- The browser session ends
 
 ---
 
 ## **4. System Features (Brief)**
 
-* Web-based interface (no installation required)
-* Same Wi-Fi user detection
-* Peer-to-peer encrypted communication
-* Temporary chat sessions
-* Automatic data destruction
-* No cloud storage of messages or files
+- Web-based interface (no installation required)
+- Same Wi-Fi user detection
+- Peer-to-peer encrypted communication
+- Temporary chat sessions
+- Automatic data destruction
+- No cloud storage of messages or files
 
 ---
 
@@ -150,15 +154,15 @@ Either user ends the chat or disconnects from Wi-Fi, causing automatic deletion 
 
 ## **7. Data Dictionary**
 
-| Data Item      | Description               | Type   |
-| -------------- | ------------------------- | ------ |
-| user_id        | Unique user identifier    | UUID   |
-| username       | Display name              | String |
-| password_hash  | Encrypted password        | String |
-| session_id     | Temporary chat session ID | UUID   |
-| message        | Chat message content      | String |
-| file_blob      | Temporary shared file     | Binary |
-| wifi_signature | Network identifier        | String |
+| Data Item      | Description               | Type     |
+| -------------- | ------------------------- | -------- |
+| user_id        | Unique user identifier    | ObjectId |
+| username       | Display name              | String   |
+| password_hash  | Encrypted password        | String   |
+| session_id     | Temporary chat session ID | UUID     |
+| message        | Chat message content      | String   |
+| file_blob      | Temporary shared file     | Binary   |
+| wifi_signature | Network identifier        | String   |
 
 ---
 
@@ -170,18 +174,17 @@ Either user ends the chat or disconnects from Wi-Fi, causing automatic deletion 
 
 ### **8.1 User Interface**
 
-* Web-based UI accessible via modern browsers
-* Displays:
-
-  * Online users (same Wi-Fi)
-  * Chat request notifications
-  * Chat window and file transfer progress
+- Web-based UI accessible via modern browsers
+- Displays:
+  - Online users (same Wi-Fi)
+  - Chat request notifications
+  - Chat window and file transfer progress
 
 ### **8.2 Software Interfaces**
 
-* WebSocket for signaling and presence
-* WebRTC Data Channels for peer-to-peer communication
-* REST APIs for authentication
+- WebSocket for signaling and presence
+- WebRTC Data Channels for peer-to-peer communication
+- REST APIs for authentication
 
 ---
 
@@ -189,32 +192,30 @@ Either user ends the chat or disconnects from Wi-Fi, causing automatic deletion 
 
 ### **9.1 Performance**
 
-* Message delivery latency shall be under 200 ms on local Wi-Fi
-* File transfer speed shall utilize available LAN bandwidth
+- Message delivery latency shall be under 200 ms on local Wi-Fi
+- File transfer speed shall utilize available LAN bandwidth
 
 ### **9.2 Security**
 
-* All communications shall be encrypted
-* No chat data shall be stored on the server
-* Authentication credentials shall be securely hashed
+- All communications shall be encrypted
+- No chat data shall be stored on the server
+- Authentication credentials shall be securely hashed
 
 ### **9.3 Usability**
 
-* Minimal user interaction to start a chat
-* Clear indicators for session status and connectivity
+- Minimal user interaction to start a chat
+- Clear indicators for session status and connectivity
 
 ### **9.4 Reliability**
 
-* The system shall handle unexpected disconnections gracefully
-* Automatic cleanup of temporary data shall be enforced
+- The system shall handle unexpected disconnections gracefully
+- Automatic cleanup of temporary data shall be enforced
 
 ---
 
 ## **10. Open Issues**
 
-* Accuracy of same Wi-Fi detection using public IP
-* Handling networks with client isolation enabled
-* Maximum supported file size limits
-* Browser compatibility differences for WebRTC
+- Accuracy of same Wi-Fi detection using public IP
+- Handling networks with client isolation enabled
 
-
+- Browser compatibility differences for WebRTC

@@ -4,8 +4,8 @@
 
 The system follows a **hybrid architecture**:
 
-* **Centralized backend** → login, presence, signaling
-* **Decentralized peer-to-peer layer** → chat & file sharing
+- **Centralized backend** → login, presence, signaling
+- **Decentralized peer-to-peer layer** → chat & file sharing
 
 👉 **No message or file ever goes to the server**
 
@@ -37,7 +37,7 @@ The system follows a **hybrid architecture**:
                          |
                   +------v----------+
                   |   Login DB      |
-                  | (PostgreSQL)    |
+                  | (MongoDB)       |
                   +-----------------+
 ```
 
@@ -51,18 +51,18 @@ The system follows a **hybrid architecture**:
 
 **Responsibilities**
 
-* User login & logout
-* Display users on same Wi-Fi
-* Send/receive chat requests
-* Handle chat UI
-* Manage file uploads/downloads
-* Destroy data on session end
+- User login & logout
+- Display users on same Wi-Fi
+- Send/receive chat requests
+- Handle chat UI
+- Manage file uploads/downloads
+- Destroy data on session end
 
 **Technologies**
 
-* React / Next.js
-* WebSocket (presence & signaling)
-* WebRTC DataChannels (chat + files)
+- React (Vite)
+- WebSocket (presence & signaling)
+- WebRTC DataChannels (chat + files)
 
 **Important Rule**
 
@@ -74,23 +74,23 @@ The system follows a **hybrid architecture**:
 
 **Responsibilities**
 
-* Authenticate users
-* Maintain online user list
-* Detect same Wi-Fi users
-* Exchange WebRTC signaling data
-* Enforce access rules
+- Authenticate users
+- Maintain online user list
+- Detect same Wi-Fi users
+- Exchange WebRTC signaling data
+- Enforce access rules
 
 **What it does NOT do**
 
-* ❌ Store messages
-* ❌ Store files
-* ❌ Read message content
+- ❌ Store messages
+- ❌ Store files
+- ❌ Read message content
 
 **Technologies**
 
-* Node.js + Express
-* WebSocket (Socket.IO / ws)
-* JWT authentication
+- Node.js + Express
+- WebSocket (Socket.IO / ws)
+- JWT authentication
 
 ---
 
@@ -98,19 +98,19 @@ The system follows a **hybrid architecture**:
 
 **Purpose**
 
-* Store user credentials only
+- Store user credentials only
 
 **Data Stored**
 
-* user_id
-* username
-* password_hash
+- user_id (ObjectId)
+- username
+- password_hash
 
 **No chat data is stored**
 
 **Technology**
 
-* PostgreSQL
+- MongoDB
 
 ---
 
@@ -118,14 +118,13 @@ The system follows a **hybrid architecture**:
 
 **Logic**
 
-* Backend tracks:
+- Backend tracks:
+  - Logged-in users
+  - Public IP address
 
-  * Logged-in users
-  * Public IP address
-* Users with same public IP:
-
-  * Considered on same Wi-Fi
-  * Shown in discovery list
+- Users with same public IP:
+  - Considered on same Wi-Fi
+  - Shown in discovery list
 
 **Flow**
 
@@ -146,10 +145,10 @@ Frontend shows same-Wi-Fi users
 2. Backend forwards request to User B
 3. User B accepts
 4. Backend exchanges:
+   - WebRTC offer
+   - WebRTC answer
+   - ICE candidates
 
-   * WebRTC offer
-   * WebRTC answer
-   * ICE candidates
 5. Direct P2P channel established
 6. Backend is no longer involved
 
@@ -159,20 +158,21 @@ Frontend shows same-Wi-Fi users
 
 **Technology**
 
-* WebRTC DataChannels
+- WebRTC DataChannels
 
 **Characteristics**
 
-* Encrypted (DTLS)
-* Peer-to-peer
-* High-speed on LAN
-* No server relay
+- Encrypted (DTLS)
+- Peer-to-peer
+- High-speed on LAN
+- No server relay
 
 **File Handling**
 
-* Chunk-based transfer
-* Stored as temporary blobs
-* Auto-deleted on session end
+- Chunk-based transfer (16KB chunks)
+- Progress bar visualization
+- Stored as temporary blobs
+- Auto-deleted on session end
 
 ---
 
@@ -180,17 +180,17 @@ Frontend shows same-Wi-Fi users
 
 **Triggered when**
 
-* Wi-Fi disconnects
-* User clicks “End Chat”
-* Browser closes
-* Network changes
+- Wi-Fi disconnects
+- User clicks “End Chat”
+- Browser closes
+- Network changes
 
 **Actions**
 
-* Close WebRTC channel
-* Clear memory
-* Delete blobs
-* Invalidate session keys
+- Close WebRTC channel
+- Clear memory
+- Delete blobs
+- Invalidate session keys
 
 ---
 
@@ -217,7 +217,5 @@ Frontend shows same-Wi-Fi users
 2. Draw **one backend server**
 3. Draw **database under backend**
 4. Connect:
-
-   * Browser → Server (WebSocket)
-   * Browser ↔ Browser (WebRTC)
-
+   - Browser → Server (WebSocket)
+   - Browser ↔ Browser (WebRTC)
