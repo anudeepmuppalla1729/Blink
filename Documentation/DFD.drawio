@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36">
   <diagram name="Level 0 DFD" id="NxUKo13KdkvaM6RxNOOJ">
-    <mxGraphModel dx="2318" dy="2798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+    <mxGraphModel dx="2980" dy="3125" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -223,16 +223,16 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;" value="Blink System" vertex="1">
-          <mxGeometry height="50" width="200" x="1790" y="40" as="geometry" />
+          <mxGeometry height="50" width="200" x="2186" y="-120" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Client&#xa;(React + Vite)" vertex="1">
-          <mxGeometry height="50" width="160" x="1460" y="160" as="geometry" />
+          <mxGeometry height="50" width="160" x="1856" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="Server&#xa;(Node.js + Express)" vertex="1">
-          <mxGeometry height="50" width="160" x="1810" y="160" as="geometry" />
+          <mxGeometry height="50" width="160" x="2206" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="WebRTC Layer&#xa;(P2P)" vertex="1">
-          <mxGeometry height="50" width="160" x="2530" y="130" as="geometry" />
+          <mxGeometry height="50" width="160" x="2926" y="-30" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-5" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-1" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-2">
           <mxGeometry relative="1" as="geometry" />
@@ -244,13 +244,13 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AuthContext&#xa;login / register / logout" vertex="1">
-          <mxGeometry height="50" width="170" x="1135" y="290" as="geometry" />
+          <mxGeometry height="50" width="170" x="1531" y="130" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="SocketContext&#xa;connect / emit / listen" vertex="1">
-          <mxGeometry height="50" width="170" x="1455" y="290" as="geometry" />
+          <mxGeometry height="50" width="170" x="1851" y="130" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="App.jsx&#xa;UI orchestration" vertex="1">
-          <mxGeometry height="50" width="160" x="1670" y="300" as="geometry" />
+          <mxGeometry height="50" width="160" x="2066" y="140" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-11" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-2" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-8">
           <mxGeometry relative="1" as="geometry" />
@@ -262,13 +262,13 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="login()&#xa;POST /api/auth/login" vertex="1">
-          <mxGeometry height="50" width="160" x="1140" y="530" as="geometry" />
+          <mxGeometry height="50" width="160" x="1536" y="370" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="register()&#xa;POST /api/auth/register" vertex="1">
-          <mxGeometry height="50" width="170" x="984" y="450" as="geometry" />
+          <mxGeometry height="50" width="170" x="1380" y="290" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="logout()&#xa;clear localStorage" vertex="1">
-          <mxGeometry height="50" width="155" x="1265" y="450" as="geometry" />
+          <mxGeometry height="50" width="155" x="1661" y="290" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-17" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-8" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-14">
           <mxGeometry relative="1" as="geometry" />
@@ -280,10 +280,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="User Discovery&#xa;user_list / user_online" vertex="1">
-          <mxGeometry height="50" width="170" x="1355" y="570" as="geometry" />
+          <mxGeometry height="50" width="170" x="1751" y="410" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Request Events&#xa;send / accept / reject" vertex="1">
-          <mxGeometry height="50" width="170" x="1550" y="570" as="geometry" />
+          <mxGeometry height="50" width="170" x="1946" y="410" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-22" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-9" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-20">
           <mxGeometry relative="1" as="geometry" />
@@ -292,16 +292,16 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="ChatWindow.jsx&#xa;UI + file input" vertex="1">
-          <mxGeometry height="50" width="160" x="1670" y="480" as="geometry" />
+          <mxGeometry height="50" width="160" x="2066" y="320" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-25" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-10" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-24">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-26" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="authRoutes&#xa;/api/auth" vertex="1">
-          <mxGeometry height="50" width="150" x="1910" y="290" as="geometry" />
+          <mxGeometry height="50" width="150" x="2306" y="130" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-27" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="socketHandler&#xa;presence + signaling" vertex="1">
-          <mxGeometry height="50" width="160" x="2120" y="290" as="geometry" />
+          <mxGeometry height="50" width="160" x="2516" y="130" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-28" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-3" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-26">
           <mxGeometry relative="1" as="geometry" />
@@ -310,10 +310,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="authController&#xa;register() + login()" vertex="1">
-          <mxGeometry height="50" width="150" x="1910" y="420" as="geometry" />
+          <mxGeometry height="50" width="150" x="2306" y="260" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-31" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="User model&#xa;mongoose schema" vertex="1">
-          <mxGeometry height="50" width="150" x="1910" y="570" as="geometry" />
+          <mxGeometry height="50" width="150" x="2306" y="410" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-32" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-26" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-30">
           <mxGeometry relative="1" as="geometry" />
@@ -322,10 +322,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-34" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="connectedUsers Map&#xa;userId → socketId + ip" vertex="1">
-          <mxGeometry height="50" width="175" x="2112.5" y="420" as="geometry" />
+          <mxGeometry height="50" width="175" x="2508.5" y="260" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-35" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="signal relay&#xa;WebRTC offer/answer/ICE" vertex="1">
-          <mxGeometry height="50" width="175" x="2310" y="420" as="geometry" />
+          <mxGeometry height="50" width="175" x="2706" y="260" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-36" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-27" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-34">
           <mxGeometry relative="1" as="geometry" />
@@ -334,19 +334,19 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-38" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" value="useWebRTC hook&#xa;peer lifecycle" vertex="1">
-          <mxGeometry height="50" width="160" x="2530" y="290" as="geometry" />
+          <mxGeometry height="50" width="160" x="2926" y="130" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-39" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-4" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-38">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-40" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="initiateConnection()&#xa;create initiator peer" vertex="1">
-          <mxGeometry height="50" width="165" x="2700" y="510" as="geometry" />
+          <mxGeometry height="50" width="165" x="3096" y="350" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-41" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="sendMessage()&#xa;text or file" vertex="1">
-          <mxGeometry height="50" width="150" x="2535" y="510" as="geometry" />
+          <mxGeometry height="50" width="150" x="2931" y="350" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="cleanup()&#xa;destroy peer + clear state" vertex="1">
-          <mxGeometry height="50" width="165" x="2890" y="510" as="geometry" />
+          <mxGeometry height="50" width="165" x="3286" y="350" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-43" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-38" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-40">
           <mxGeometry relative="1" as="geometry" />
@@ -358,10 +358,10 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-46" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="sendChunkedFile()&#xa;16 KB chunks + progress" vertex="1">
-          <mxGeometry height="50" width="170" x="2310" y="680" as="geometry" />
+          <mxGeometry height="50" width="170" x="2706" y="520" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-47" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="text msg&#xa;JSON over DataChannel" vertex="1">
-          <mxGeometry height="50" width="160" x="2530" y="680" as="geometry" />
+          <mxGeometry height="50" width="160" x="2926" y="520" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-48" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-41" style="edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-46">
           <mxGeometry relative="1" as="geometry" />
