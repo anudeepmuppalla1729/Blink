@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36">
   <diagram name="Level 0 DFD" id="NxUKo13KdkvaM6RxNOOJ">
-    <mxGraphModel dx="948" dy="2122" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+    <mxGraphModel dx="3477" dy="3371" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -520,7 +520,7 @@
           <mxGeometry height="100" width="260" y="93" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-100" parent="1" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;" value="useWebRTC" vertex="1">
-          <mxGeometry height="260" width="290" x="4240" y="880" as="geometry" />
+          <mxGeometry height="260" width="290" x="4240" y="890" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-101" parent="JewUBvkpHL5MtHGbXgg2-100" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;html=1;" value="- peer : Peer | null&#xa;- peerRef : Ref&lt;Peer&gt;&#xa;- isConnected : Boolean&#xa;- messages : Message[]&#xa;- incomingFiles : Map&lt;String, FileData&gt;" vertex="1">
           <mxGeometry height="90" width="290" y="30" as="geometry" />
@@ -583,7 +583,7 @@
           <mxGeometry height="70" width="260" y="43" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-121" parent="1" style="swimlane;fontStyle=1;align=center;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;" value="App" vertex="1">
-          <mxGeometry height="200" width="280" x="3710" y="1470" as="geometry" />
+          <mxGeometry height="200" width="280" x="3710" y="1390" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-122" parent="JewUBvkpHL5MtHGbXgg2-121" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;html=1;" value="- activeUsers : ConnectedUser[]&#xa;- incomingRequest : Object | null&#xa;- activeChatUser : Object | null" vertex="1">
           <mxGeometry height="60" width="280" y="30" as="geometry" />
@@ -645,7 +645,12 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-140" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-96" style="endArrow=open;endFill=0;html=1;dashed=1;strokeColor=#9673a6;fontColor=#9673a6;edgeStyle=orthogonalEdgeStyle;" target="JewUBvkpHL5MtHGbXgg2-112" value="WebSocket">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5010" y="1630" />
+              <mxPoint x="5010" y="500" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="JewUBvkpHL5MtHGbXgg2-141" edge="1" parent="1" source="JewUBvkpHL5MtHGbXgg2-112" style="endArrow=open;endFill=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="JewUBvkpHL5MtHGbXgg2-118" value="">
           <mxGeometry relative="1" as="geometry" />
