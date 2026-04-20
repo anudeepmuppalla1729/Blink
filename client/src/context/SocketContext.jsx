@@ -14,17 +14,26 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user && token) {
       const newSocket = io(API_URL, {
-        auth: { token, userId: user.id, username: user.username }
+        auth: {
+          token,
+          userId: user.id,
+          username: user.username,
+          name: user.name || user.username,
+          avatar: user.avatar || null,
+        },
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 10,
       });
 
       setSocket(newSocket);
 
       return () => newSocket.close();
     } else {
-      if (socket) {
-        socket.close();
-        setSocket(null);
-      }
+      setSocket(prev => {
+        prev?.close();
+        return null;
+      });
     }
   }, [user, token]);
 

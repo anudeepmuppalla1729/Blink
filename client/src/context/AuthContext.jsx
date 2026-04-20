@@ -12,53 +12,57 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      // Ideally verify token with backend, for now decode or trust if valid
-       // For simplicity, we just check if we have a user object stored or fetch it
-       const storedUser = localStorage.getItem('user');
-       if (storedUser) {
-         setUser(JSON.parse(storedUser));
-       }
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     }
     setLoading(false);
   }, [token]);
 
   const login = async (username, password) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+    const response = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
 
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      return true;
-    } catch (error) {
-      console.error("Login failed", error);
-      throw error;
-    }
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return true;
   };
 
-  const register = async (username, password) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+  // register now accepts { name, username, email, password, avatar }
+  const register = async (fields) => {
+    const response = await fetch(`${API_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fields),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    return true;
+  };
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-      return true;
-    } catch (error) {
-       console.error("Register failed", error);
-       throw error;
-    }
+  const updateProfile = async (fields) => {
+    const response = await fetch(`${API_URL}/api/auth/profile`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(fields),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    
+    setUser(data);
+    localStorage.setItem('user', JSON.stringify(data));
+    return data;
   };
 
   const logout = () => {
@@ -69,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, register, updateProfile, logout, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
