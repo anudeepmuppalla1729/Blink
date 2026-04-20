@@ -1,92 +1,161 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useSocket } from './context/SocketContext';
 import { useWebRTC } from './hooks/useWebRTC';
 import ChatWindow from './components/Chat/ChatWindow';
 
 function App() {
-  const { user, login, register, logout } = useAuth();
+  const { user, login, register, updateProfile, logout } = useAuth();
   const socket = useSocket();
-  const { initiateConnection, isConnected, messages, sendMessage, cleanup } = useWebRTC();
+  const { initiateConnection, isConnected, messages, sendMessage, cleanup, setOnPeerClose } = useWebRTC();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'profile'
   const [isRegister, setIsRegister] = useState(false);
+  const [authForm, setAuthForm] = useState({ name: '', username: '', email: '', password: '', avatar: '' });
   
   const [activeUsers, setActiveUsers] = useState([]);
-  const [incomingRequest, setIncomingRequest] = useState(null); // { fromUserId, username }
-  const [activeChatUser, setActiveChatUser] = useState(null); // { userId, username }
+  const activeUsersRef = useRef([]); 
+  
+  const [incomingRequest, setIncomingRequest] = useState(null); 
+  const [pendingRequest, setPendingRequest] = useState(null); 
+  const [activeChatUser, setActiveChatUser] = useState(null); 
 
-  // Socket Listeners for Discovery & Signaling
+  const [toasts, setToasts] = useState([]);
+
+  const showToast = useCallback((msg, type = 'info') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  }, []);
+
+  useEffect(() => {
+    activeUsersRef.current = activeUsers;
+  }, [activeUsers]);
+
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('user_list', (users) => {
-      setActiveUsers(users);
-    });
+    const handleUserList = (users) => setActiveUsers(users);
 
-    socket.on('user_online', (newUser) => {
-      setActiveUsers(prev => [...prev.filter(u => u.userId !== newUser.userId), newUser]);
-    });
+    const handleUserOnline = (newUser) => {
+      setActiveUsers(prev => {
+        const filtered = prev.filter(u => u.userId !== newUser.userId);
+        return [...filtered, newUser];
+      });
+    };
 
-    socket.on('user_offline', ({ userId }) => {
+    const handleUserOffline = ({ userId }) => {
       setActiveUsers(prev => prev.filter(u => u.userId !== userId));
-    });
+      setIncomingRequest(prev => prev?.fromUserId === userId ? null : prev);
+      setPendingRequest(prev => prev === userId ? null : prev);
+    };
 
-    socket.on('receive_request', ({ fromUserId, username }) => {
-      setIncomingRequest({ fromUserId, username });
-    });
+    const handleReceiveRequest = (req) => setIncomingRequest(req);
 
-    socket.on('request_accepted', ({ fromUserId }) => {
-      // I am the sender, request accepted by target
-      // Find username
-      console.log("Request accepted by", fromUserId);
-      const targetUser = activeUsers.find(u => u.userId === fromUserId);
-      console.log("Found target user:", targetUser);
+    const handleRequestAccepted = ({ fromUserId, name, avatar }) => {
+      showToast(`${name || 'User'} accepted your request`, 'success');
+      setPendingRequest(null);
       initiateConnection(fromUserId);
-      setActiveChatUser({ userId: fromUserId, username: targetUser?.username || 'User' });
-    });
+      setActiveChatUser({ userId: fromUserId, name, avatar });
+    };
 
-    socket.on('request_rejected', ({ fromUserId }) => {
-      alert(`Chat request rejected by user.`);
-    });
+    const handleRequestRejected = ({ name }) => {
+      setPendingRequest(null);
+      showToast(`${name || 'User'} declined your request`, 'error');
+    };
+
+    const handleChatEnded = ({ fromUserId }) => {
+      setActiveChatUser(prev => {
+        if (prev?.userId === fromUserId) {
+          showToast('Chat ended by peer', 'info');
+          cleanup();
+          return null;
+        }
+        return prev;
+      });
+    };
+
+    socket.on('user_list', handleUserList);
+    socket.on('user_online', handleUserOnline);
+    socket.on('user_offline', handleUserOffline);
+    socket.on('receive_request', handleReceiveRequest);
+    socket.on('request_accepted', handleRequestAccepted);
+    socket.on('request_rejected', handleRequestRejected);
+    socket.on('chat_ended', handleChatEnded);
 
     return () => {
-      socket.off('user_list');
-      socket.off('user_online');
-      socket.off('user_offline');
-      socket.off('receive_request');
-      socket.off('request_accepted');
-      socket.off('request_rejected');
+      socket.off('user_list', handleUserList);
+      socket.off('user_online', handleUserOnline);
+      socket.off('user_offline', handleUserOffline);
+      socket.off('receive_request', handleReceiveRequest);
+      socket.off('request_accepted', handleRequestAccepted);
+      socket.off('request_rejected', handleRequestRejected);
+      socket.off('chat_ended', handleChatEnded);
     };
-  }, [socket, activeUsers]);
+  }, [socket, initiateConnection, showToast, cleanup]);
 
-  const handleLogin = async (e) => {
+  useEffect(() => {
+    setOnPeerClose(() => {
+      showToast('Connection closed', 'info');
+      setActiveChatUser(null);
+    });
+  }, [setOnPeerClose, showToast]);
+
+  const handleAuthChange = (e) => {
+    const { name, value } = e.target;
+    setAuthForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setAuthForm(prev => ({ ...prev, avatar: reader.result }));
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
+    
+    // Frontend Validation
+    if (isRegister) {
+      if (authForm.name.trim().length < 2) return showToast('Name must be at least 2 characters', 'error');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authForm.email)) return showToast('Invalid email address', 'error');
+    }
+    if (authForm.username.trim().length < 3) return showToast('Username must be at least 3 characters', 'error');
+    if (!/^[a-z0-9_]+$/.test(authForm.username.toLowerCase())) return showToast('Username can only contain letters, numbers, and underscores', 'error');
+    if (authForm.password.length < 6) return showToast('Password must be at least 6 characters', 'error');
+
     try {
       if (isRegister) {
-        await register(username, password);
-        alert('Registration successful! Please login.');
-        setIsRegister(false);
+        await register({ ...authForm, username: authForm.username.toLowerCase() });
+        showToast('Registration successful! Logging in...', 'success');
+        await login(authForm.username.toLowerCase(), authForm.password);
       } else {
-        await login(username, password);
+        await login(authForm.username.toLowerCase(), authForm.password);
       }
     } catch (err) {
-      alert(err.message);
+      showToast(err.message, 'error');
     }
   };
 
   const sendRequest = (targetUserId) => {
     socket.emit('send_request', { toUserId: targetUserId });
-    alert('Request sent! Waiting for approval...');
+    setPendingRequest(targetUserId);
   };
 
   const acceptRequest = () => {
     if (!incomingRequest) return;
     socket.emit('accept_request', { toUserId: incomingRequest.fromUserId });
-    setActiveChatUser({ userId: incomingRequest.fromUserId, username: incomingRequest.username });
+    setActiveChatUser({ 
+      userId: incomingRequest.fromUserId, 
+      name: incomingRequest.name,
+      avatar: incomingRequest.avatar 
+    });
     setIncomingRequest(null);
-    // Note: The one who accepts waits for the Offer. useWebRTC handles incoming signals automatically.
   };
 
   const rejectRequest = () => {
@@ -96,103 +165,256 @@ function App() {
   };
 
   const handleCloseChat = () => {
+    if (activeChatUser && socket) {
+       socket.emit('end_chat', { toUserId: activeChatUser.userId });
+    }
     cleanup();
     setActiveChatUser(null);
   };
 
+  // ─── Profile Form State ───
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '',
+    password: '',
+    avatar: user?.avatar || ''
+  });
+
+  // Keep profile form synced with user
+  useEffect(() => {
+    if (user) {
+      setProfileForm(prev => ({ ...prev, name: user.name, avatar: user.avatar || '' }));
+    }
+  }, [user]);
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfileAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setProfileForm(prev => ({ ...prev, avatar: reader.result }));
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Frontend Validation
+    if (profileForm.name.trim().length < 2) return showToast('Name must be at least 2 characters', 'error');
+    if (profileForm.password && profileForm.password.length < 6) return showToast('New password must be at least 6 characters', 'error');
+
+    try {
+      await updateProfile(profileForm);
+      showToast('Profile updated successfully', 'success');
+      setProfileForm(prev => ({ ...prev, password: '' })); // clear password field
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  // ─── Toasts Component ───
+  const Toasts = () => (
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast ${t.type}`}>
+          {t.msg}
+        </div>
+      ))}
+    </div>
+  );
+
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-96">
-          <h1 className="text-2xl font-bold mb-6 text-center">Blink - Login</h1>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Username"
-              className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-            >
-              {isRegister ? 'Register' : 'Login'}
+       <div className="auth-wrapper">
+        <Toasts />
+        <div className="auth-card">
+          <h1 className="auth-title">Blink</h1>
+          <p className="auth-subtitle">{isRegister ? 'Create your account' : 'Welcome back'}</p>
+          
+          <form onSubmit={handleAuthSubmit} className="auth-form">
+            {isRegister && (
+              <>
+                <div className="avatar-upload-container">
+                  <label style={{ cursor: 'pointer' }}>
+                     {authForm.avatar ? (
+                        <img src={authForm.avatar} alt="Avatar Preview" className="avatar-preview" />
+                     ) : (
+                        <div className="avatar-placeholder">
+                           <span>+</span>
+                        </div>
+                     )}
+                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+                  </label>
+                </div>
+                <input type="text" name="name" placeholder="Full Name" value={authForm.name} onChange={handleAuthChange} required className="input-field" />
+                <input type="email" name="email" placeholder="Email Address" value={authForm.email} onChange={handleAuthChange} required className="input-field" />
+              </>
+            )}
+            <input type="text" name="username" placeholder="Username" value={authForm.username} onChange={handleAuthChange} required className="input-field" />
+            <input type="password" name="password" placeholder="Password" value={authForm.password} onChange={handleAuthChange} required className="input-field" />
+            
+            <button type="submit" className="btn-primary" style={{ marginTop: '0.5rem' }}>
+              {isRegister ? 'Sign Up' : 'Log In'}
             </button>
           </form>
-          <p className="mt-4 text-center text-sm">
-            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button 
-              className="text-blue-500 hover:underline"
-              onClick={() => setIsRegister(!isRegister)}
-            >
-              {isRegister ? 'Login' : 'Register'}
+          
+          <div className="auth-switch">
+            {isRegister ? 'Already have an account?' : "Don't have an account?"}
+            <button onClick={() => setIsRegister(!isRegister)}>
+              {isRegister ? 'Log in' : 'Sign up'}
             </button>
-          </p>
+          </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+    <div className="app-container">
+      <Toasts />
+
       {/* Navbar */}
-      <nav className="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Blink ({user.username})</h1>
-        <button onClick={logout} className="text-red-500 hover:text-red-700">Logout</button>
+      <nav className="navbar">
+        <div className="nav-brand" style={{ cursor: 'pointer' }} onClick={() => setCurrentView('dashboard')}>
+          {user.avatar ? (
+            <img src={user.avatar} alt="Profile" className="avatar-sm" />
+          ) : (
+            <div className="avatar-sm">
+               {user.name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase()}
+            </div>
+          )}
+          <div className="nav-user-details">
+            <h1 className="nav-logo-text">Blink</h1>
+            <span className="nav-user-name">{user.name || user.username}</span>
+          </div>
+        </div>
+        <div className="nav-actions">
+          <button onClick={() => setCurrentView('profile')} className="nav-profile-btn" style={{ color: currentView === 'profile' ? 'var(--accent)' : '' }}>Profile</button>
+          <button onClick={logout} className="nav-logout">Log out</button>
+        </div>
       </nav>
 
       {/* Main Content */}
-      <div className="container mx-auto p-6">
-        <h2 className="text-2xl font-semibold mb-4">Users on your Wi-Fi</h2>
-        
-        {activeUsers.length === 0 ? (
-          <p className="text-gray-500">No other users found on this network.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {activeUsers.map(u => (
-              <div key={u.userId} className="bg-white dark:bg-gray-800 p-4 rounded shadow flex justify-between items-center">
-                <span>{u.username}</span>
-                <button 
-                  onClick={() => sendRequest(u.userId)}
-                  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
-                >
-                  Connect
-                </button>
-              </div>
-            ))}
+      {currentView === 'dashboard' ? (
+        <main className="dashboard-main">
+          <div className="dashboard-header">
+             <h2 className="dashboard-title">
+               Nearby Users
+               <span className="online-indicator"></span>
+             </h2>
+             <span className="online-count">{activeUsers.length} online</span>
           </div>
-        )}
-      </div>
+          
+          {activeUsers.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📡</div>
+              <p>Scanning network for other users...</p>
+            </div>
+          ) : (
+            <div className="users-grid">
+              {activeUsers.map(u => (
+                <div key={u.userId} className="user-card">
+                  {u.avatar ? (
+                    <img src={u.avatar} alt={u.name} className="avatar-sm" style={{ width: '48px', height: '48px' }} />
+                  ) : (
+                    <div className="avatar-sm" style={{ width: '48px', height: '48px', fontSize: '1.25rem' }}>
+                       {(u.name || u.username)[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div className="user-info">
+                    <div className="user-name">{u.name || u.username}</div>
+                    <div className="user-username">@{u.username}</div>
+                  </div>
+                  
+                  {pendingRequest === u.userId ? (
+                    <button disabled className="btn-waiting">
+                      <span className="spinner"></span>
+                      Waiting
+                    </button>
+                  ) : (
+                    <button onClick={() => sendRequest(u.userId)} className="btn-connect">
+                      Connect
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      ) : (
+        <main className="dashboard-main">
+          <div className="profile-container">
+            <div className="profile-header">
+              <h2 className="profile-title">Your Profile</h2>
+              <p className="text-secondary text-sm">Manage your personal information and security.</p>
+            </div>
 
-      {/* Incoming Request Modal */}
+            <form onSubmit={handleProfileSubmit} className="profile-form">
+              <div className="avatar-upload-container">
+                <label style={{ cursor: 'pointer' }}>
+                   {profileForm.avatar ? (
+                      <img src={profileForm.avatar} alt="Avatar Preview" className="avatar-preview" />
+                   ) : (
+                      <div className="avatar-placeholder">
+                         <span>+</span>
+                      </div>
+                   )}
+                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleProfileAvatarChange} />
+                </label>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input type="text" name="name" value={profileForm.name} onChange={handleProfileChange} required className="input-field" />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Username</label>
+                <input type="text" value={user.username} disabled className="input-field" style={{ opacity: 0.6, cursor: 'not-allowed' }} />
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input type="email" value={user.email} disabled className="input-field" style={{ opacity: 0.6, cursor: 'not-allowed' }} />
+              </div>
+
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label className="form-label">New Password (leave blank to keep current)</label>
+                <input type="password" name="password" placeholder="Enter new password" value={profileForm.password} onChange={handleProfileChange} className="input-field" />
+              </div>
+
+              <button type="submit" className="btn-primary" style={{ marginTop: '1rem' }}>
+                Save Changes
+              </button>
+            </form>
+          </div>
+        </main>
+      )}
+
+      {/* Incoming Request Notification */}
       {incomingRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
-            <h3 className="text-lg font-bold mb-2">Chat Request</h3>
-            <p className="mb-4">{incomingRequest.username} wants to chat.</p>
-            <div className="flex gap-2">
-              <button 
-                onClick={acceptRequest}
-                className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-              >
-                Accept
-              </button>
-              <button 
-                onClick={rejectRequest}
-                className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white py-2 rounded hover:bg-gray-400"
-              >
-                Decline
-              </button>
+        <div className="modal-overlay">
+          <div className="request-card">
+            <div className="request-header">
+              {incomingRequest.avatar ? (
+                <img src={incomingRequest.avatar} alt="" className="avatar-sm" style={{ width: '44px', height: '44px' }} />
+              ) : (
+                <div className="avatar-sm" style={{ width: '44px', height: '44px' }}>
+                  {(incomingRequest.name || 'U')[0].toUpperCase()}
+                </div>
+              )}
+              <div className="user-info">
+                <div className="user-name">{incomingRequest.name}</div>
+                <div className="user-username">wants to connect</div>
+              </div>
+            </div>
+            <div className="request-actions">
+              <button onClick={rejectRequest} className="btn-secondary flex-1">Decline</button>
+              <button onClick={acceptRequest} className="btn-primary flex-1">Accept</button>
             </div>
           </div>
         </div>
@@ -204,7 +426,8 @@ function App() {
           messages={messages} 
           sendMessage={sendMessage} 
           onClose={handleCloseChat} 
-          peerName={activeChatUser?.username || 'Peer'}
+          peer={activeChatUser}
+          isConnected={isConnected}
         />
       )}
     </div>

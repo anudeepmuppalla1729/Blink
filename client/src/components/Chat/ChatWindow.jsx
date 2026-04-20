@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const ChatWindow = ({ messages, sendMessage, onClose, peerName }) => {
+const ChatWindow = ({ messages, sendMessage, onClose, peer, isConnected }) => {
   const [input, setInput] = useState('');
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -11,93 +20,139 @@ const ChatWindow = ({ messages, sendMessage, onClose, peerName }) => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      sendMessage(file, 'file');
+    }
+  };
+
+  const formatTime = (ts) => {
+    if (!ts) return '';
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-lg shadow-xl flex flex-col h-[80vh]">
+    <div className="chat-overlay">
+      <div className="chat-container">
+        
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-bold dark:text-white">Chat with {peerName}</h2>
-          <button 
-            onClick={onClose}
-            className="text-red-500 hover:text-red-700 font-semibold"
-          >
-            End Chat
+        <div className="chat-header">
+          <div className="chat-peer-info">
+            {peer?.avatar ? (
+              <img src={peer.avatar} alt="Avatar" className="avatar-sm" style={{ width: '40px', height: '40px' }} />
+            ) : (
+              <div className="avatar-sm" style={{ width: '40px', height: '40px' }}>
+                {(peer?.name || 'U')[0].toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h2 className="chat-peer-name">{peer?.name || 'Peer'}</h2>
+              <div className="chat-status">
+                <span className={`status-dot ${isConnected ? 'connected' : 'connecting'}`}></span>
+                <span>{isConnected ? 'Connected securely' : 'Establishing connection...'}</span>
+              </div>
+            </div>
+          </div>
+          
+          <button onClick={onClose} className="btn-close-chat" title="End Chat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {messages.map((msg, idx) => (
-            <div 
-              key={idx} 
-              className={`flex ${msg.senderId === 'me' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div 
-                className={`max-w-xs px-4 py-2 rounded-lg ${
-                  msg.senderId === 'me' 
-                    ? 'bg-blue-500 text-white rounded-br-none' 
-                    : 'bg-gray-200 dark:bg-gray-700 dark:text-white rounded-bl-none'
-                }`}
-              >
-                {msg.type === 'file' ? (
-                  <div className="min-w-[200px]">
-                    <p className="font-bold text-sm mb-1">📎 {msg.fileName}</p>
-                    {msg.status === 'uploading' || msg.status === 'downloading' ? (
-                       <div className="w-full">
-                         <div className="flex justify-between text-xs mb-1">
-                            <span>{msg.status === 'uploading' ? 'Sending...' : 'Receiving...'}</span>
-                            <span>{msg.progress}%</span>
+        <div className="chat-messages">
+          {messages.map((msg, idx) => {
+            const isMe = msg.senderId === 'me';
+            return (
+              <div key={idx} className={`message-row ${isMe ? 'me' : 'peer'}`}>
+                <div className="message-group">
+                  
+                  {/* Avatar for peer messages */}
+                  {!isMe && (
+                    <div style={{ flexShrink: 0, paddingBottom: '1.2rem' }}>
+                      {peer?.avatar ? (
+                         <img src={peer.avatar} alt="" className="avatar-sm" style={{ width: '32px', height: '32px' }} />
+                      ) : (
+                         <div className="avatar-sm" style={{ width: '32px', height: '32px', fontSize: '0.75rem' }}>
+                            {(peer?.name || 'U')[0].toUpperCase()}
                          </div>
-                         <div className="w-full bg-gray-300 dark:bg-gray-600 rounded-full h-2">
-                           <div 
-                             className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                             style={{ width: `${msg.progress}%` }}
-                           ></div>
-                         </div>
-                       </div>
-                    ) : (
-                       <a href={msg.content} download={msg.fileName} className="underline text-xs block mt-1 hover:text-blue-100">Download</a>
-                    )}
+                      )}
+                    </div>
+                  )}
+
+                  <div className="message-content">
+                    <div className="message-bubble">
+                      {msg.type === 'file' ? (
+                        <div className="file-attachment">
+                          <div className="file-header">
+                            <div className="file-icon">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                            </div>
+                            <p className="file-name" title={msg.fileName}>{msg.fileName}</p>
+                          </div>
+                          
+                          {(msg.status === 'uploading' || msg.status === 'downloading') ? (
+                            <div className="file-progress-container">
+                              <div className="file-progress-text">
+                                <span>{msg.status === 'uploading' ? 'Sending...' : 'Receiving...'}</span>
+                                <span>{msg.progress}%</span>
+                              </div>
+                              <div className="file-progress-bar-bg">
+                                <div className="file-progress-bar-fill" style={{ width: `${msg.progress}%` }}></div>
+                              </div>
+                            </div>
+                          ) : (
+                            <a href={msg.content} download={msg.fileName} className="file-download">
+                              Download
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        <span>{msg.content}</span>
+                      )}
+                    </div>
+                    <span className="message-time">{formatTime(msg.ts)}</span>
                   </div>
-                ) : (
-                  msg.content
-                )}
+
+                </div>
               </div>
+            );
+          })}
+          
+          {messages.length === 0 && isConnected && (
+            <div className="chat-empty-state">
+               <div className="chat-empty-icon">✨</div>
+               <h3 className="chat-empty-title">Connection established</h3>
+               <p className="chat-empty-subtitle">Your chat is peer-to-peer and secure.</p>
             </div>
-          ))}
-          {messages.length === 0 && (
-            <p className="text-center text-gray-500">No messages yet. Say hello!</p>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSend} className="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-           <label className="cursor-pointer bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-2 rounded-lg flex items-center justify-center">
-            <span className="text-xl">📎</span>
-            <input 
-              type="file" 
-              className="hidden" 
-              onChange={(e) => {
-                if(e.target.files[0]) {
-                  sendMessage(e.target.files[0], 'file'); // Check if sendMessage handles this
-                }
-              }}
+        <div className="chat-input-area">
+          <form onSubmit={handleSend} className="chat-form">
+            <label className="btn-attach" title="Attach file">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+              <input type="file" onChange={handleFileChange} disabled={!isConnected} />
+            </label>
+            
+            <input
+              type="text"
+              className="chat-input"
+              placeholder={isConnected ? "Message..." : "Connecting..."}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              disabled={!isConnected}
             />
-          </label>
-          <input
-            type="text"
-            className="flex-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type a message..."
-            value={input}
-            onChange={e => setInput(e.target.value)}
-          />
-          <button 
-            type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Send
-          </button>
-        </form>
+            
+            <button type="submit" disabled={!input.trim() || !isConnected} className="btn-send">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </form>
+        </div>
+
       </div>
     </div>
   );
