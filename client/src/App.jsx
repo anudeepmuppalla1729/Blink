@@ -50,6 +50,15 @@ function App() {
       setActiveUsers(prev => prev.filter(u => u.userId !== userId));
       setIncomingRequest(prev => prev?.fromUserId === userId ? null : prev);
       setPendingRequest(prev => prev === userId ? null : prev);
+      
+      setActiveChatUser(prev => {
+        if (prev?.userId === userId) {
+          showToast('Peer disconnected abruptly', 'error');
+          cleanup();
+          return null;
+        }
+        return prev;
+      });
     };
 
     const handleReceiveRequest = (req) => setIncomingRequest(req);

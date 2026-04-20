@@ -24,7 +24,9 @@ const io = new Server(server, {
   cors: {
     origin: "*", // Allow all origins for local Wi-Fi, or restrictive in prod
     methods: ["GET", "POST"]
-  }
+  },
+  pingInterval: 2000,
+  pingTimeout: 5000
 });
 
 // Socket Logic (Placeholder for now)
