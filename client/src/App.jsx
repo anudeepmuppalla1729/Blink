@@ -4,6 +4,39 @@ import { useSocket } from './context/SocketContext';
 import { useWebRTC } from './hooks/useWebRTC';
 import ChatWindow from './components/Chat/ChatWindow';
 
+const compressImage = (file, callback) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = (event) => {
+    const img = new Image();
+    img.src = event.target.result;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 250;
+      const MAX_HEIGHT = 250;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      callback(canvas.toDataURL('image/jpeg', 0.8)); // Compress as JPEG with 80% quality
+    };
+  };
+};
+
 function App() {
   const { user, login, register, updateProfile, logout } = useAuth();
   const socket = useSocket();
@@ -120,9 +153,9 @@ function App() {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setAuthForm(prev => ({ ...prev, avatar: reader.result }));
-      reader.readAsDataURL(file);
+      compressImage(file, (compressedBase64) => {
+        setAuthForm(prev => ({ ...prev, avatar: compressedBase64 }));
+      });
     }
   };
 
@@ -203,9 +236,9 @@ function App() {
   const handleProfileAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setProfileForm(prev => ({ ...prev, avatar: reader.result }));
-      reader.readAsDataURL(file);
+      compressImage(file, (compressedBase64) => {
+        setProfileForm(prev => ({ ...prev, avatar: compressedBase64 }));
+      });
     }
   };
 
