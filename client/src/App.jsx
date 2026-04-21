@@ -55,6 +55,19 @@ function App() {
 
   const [toasts, setToasts] = useState([]);
 
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('blink-theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('blink-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+
   const showToast = useCallback((msg, type = 'info') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, msg, type }]);
@@ -335,6 +348,9 @@ function App() {
           </div>
         </div>
         <div className="nav-actions">
+          <button onClick={toggleTheme} className="nav-theme-toggle" style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', opacity: 0.8 }}>
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
           <button onClick={() => setCurrentView('profile')} className="nav-profile-btn" style={{ color: currentView === 'profile' ? 'var(--accent)' : '' }}>Profile</button>
           <button onClick={logout} className="nav-logout">Log out</button>
         </div>
