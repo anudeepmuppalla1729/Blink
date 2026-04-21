@@ -348,8 +348,58 @@ function App() {
           </div>
         </div>
         <div className="nav-actions">
-          <button onClick={toggleTheme} className="nav-theme-toggle" style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', opacity: 0.8 }}>
-            {theme === 'light' ? '🌙' : '☀️'}
+          <button 
+            onClick={toggleTheme} 
+            className="nav-theme-toggle" 
+            type="button" 
+            title="Toggle theme" 
+            aria-label="Toggle theme"
+            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', cursor: 'pointer', transition: 'color 0.2s' }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+              width="1.25em"
+              height="1.25em"
+              fill="currentColor"
+              strokeLinecap="round"
+              viewBox="0 0 32 32"
+            >
+              {theme === 'light' ? (
+                <g>
+                  <circle cx="16" cy="16" r="9.34" />
+                  <g stroke="currentColor" strokeWidth="1.5">
+                    <path d="M16 5.5v-4" />
+                    <path d="M16 30.5v-4" />
+                    <path d="M1.5 16h4" />
+                    <path d="M26.5 16h4" />
+                    <path d="m23.4 8.6 2.8-2.8" />
+                    <path d="m5.7 26.3 2.9-2.9" />
+                    <path d="m5.8 5.8 2.8 2.8" />
+                    <path d="m23.4 23.4 2.9 2.9" />
+                  </g>
+                </g>
+              ) : (
+                <>
+                  <clipPath id="theme-toggle__classic__cutout">
+                    <path d="M0-5h30a1 1 0 0 0 9 13v24H0Z" />
+                  </clipPath>
+                  <g clipPath="url(#theme-toggle__classic__cutout)">
+                    <circle cx="16" cy="16" r="9.34" />
+                    <g stroke="currentColor" strokeWidth="1.5">
+                      <path d="M16 5.5v-4" />
+                      <path d="M16 30.5v-4" />
+                      <path d="M1.5 16h4" />
+                      <path d="M26.5 16h4" />
+                      <path d="m23.4 8.6 2.8-2.8" />
+                      <path d="m5.7 26.3 2.9-2.9" />
+                      <path d="m5.8 5.8 2.8 2.8" />
+                      <path d="m23.4 23.4 2.9 2.9" />
+                    </g>
+                  </g>
+                </>
+              )}
+            </svg>
           </button>
           <button onClick={() => setCurrentView('profile')} className="nav-profile-btn" style={{ color: currentView === 'profile' ? 'var(--accent)' : '' }}>Profile</button>
           <button onClick={logout} className="nav-logout">Log out</button>
