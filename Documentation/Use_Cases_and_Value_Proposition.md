@@ -30,9 +30,10 @@ Consider the traditional methods of local sharing:
 
 By utilizing **WebRTC** for direct Peer-to-Peer (P2P) connections and **browser-based technologies**, Blink offers:
 - **Private Chat over Same Wi-Fi:** All text communication happens securely and directly between devices connected to the same router. There are no central servers recording your conversation. When the chat window closes, the data is gone forever.
+- **Dynamic Group Chats:** Instantly create local rooms for multiple people to collaborate. Perfect for meetings, classrooms, or social gatherings where one-to-one communication isn't enough.
 - **Direct Local File Sending:** Send files of unlimited size instantly over your shared Wi-Fi network. Because files are sent over the Local Area Network (LAN) router rather than the public internet, transfer speeds are blazing fast and completely bypass slow internet uploads or cloud storage limits.
 - **Cross-Platform Universality:** It runs in any modern web browser. No app installation is required. It works seamlessly across Windows, macOS, Linux, iOS, and Android.
-- **Zero-Friction Discovery:** Users don't need to exchange phone numbers, emails, or friend requests. If you are on the same Wi-Fi, you instantly see each other.
+- **Zero-Friction Discovery:** Users don't need to exchange phone numbers, emails, or friend requests. If you are on the same Wi-Fi, you instantly see each other and the active groups nearby.
 
 ---
 
@@ -45,7 +46,7 @@ By utilizing **WebRTC** for direct Peer-to-Peer (P2P) connections and **browser-
 
 ### 3.2. University Classrooms & Study Groups
 **Scenario:** A group of students is studying in the library. One student has a comprehensive folder of PDF notes they want to share with the group.
-**With Blink:** All students navigate to the Blink dashboard. The sender instantly sees all nearby peers and can rapidly connect and distribute the uncompressed PDFs to everyone, regardless of whether they have Androids, iPhones, or laptops.
+**With Blink:** Instead of sending the files individually to 10 different people, the sender creates a "Library Study Group". All classmates instantly see the group on their dashboard and request to join. Once accepted, the sender broadcasts the files to the entire group at once, saving immense time and network bandwidth.
 
 ### 3.3. High-Privacy Environments (Legal, Medical, Corporate)
 **Scenario:** A legal team is gathered in a conference room reviewing sensitive, confidential case files.

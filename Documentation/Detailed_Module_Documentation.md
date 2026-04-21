@@ -8,7 +8,8 @@ This document provides a deep, pin-to-pin, and comprehensive explanation of ever
 
 At a high level, Blink operates using a **Hybrid Architecture**:
 1. **Centralized Signaling & Presence (Server):** A Node.js backend tracks connected users, detects which users are on the same local network (via IP tracking), and acts as a middleman to relay WebRTC handshake signals.
-2. **Decentralized Communication (Client):** Once the handshake is complete, all chat messages and file transfers happen entirely Peer-to-Peer (P2P) using WebRTC `RTCDataChannel`. The server is entirely bypassed during communication, ensuring zero latency and absolute privacy.
+2. **Decentralized Communication (Private Chat):** Once the handshake is complete, all private chat messages and file transfers happen entirely Peer-to-Peer (P2P) using WebRTC `RTCDataChannel`. The server is entirely bypassed during communication.
+3. **Server-Relayed Communication (Group Chat):** Group chat messages and file chunks are relayed through the server via Socket.io to all members. This ensures stability and ease of discovery for multi-user sessions while remaining in-memory only.
 
 ---
 
@@ -47,6 +48,12 @@ This is the most crucial part of the backend. It determines *who* can see *whom*
   - **Magic Local Network Logic:** When a user connects, the server iterates through `connectedUsers` and finds all other users that have the **exact same IP address**. It then emits a `user_online` event to those specific peers, and sends the connecting user a `user_list`.
 - **Signaling Relay:** WebRTC requires an exchange of "Offers", "Answers", and "ICE Candidates" before a P2P connection can be made. Because the peers don't know each other's local IP/Ports yet, they send these signals to the server via the `signal` event, which the server simply forwards to the target user's `socketId`.
 - **Chat Requests:** Handles the flow of `send_request`, `accept_request`, and `reject_request` to ensure users mutually agree to open a WebRTC channel before signaling begins.
+- **Group Chat Lifecycle:**
+  - **Creation:** Any user can emit `create_group`, generating a unique `groupId`.
+  - **Group Management:** The server stores an `activeGroups` Map containing group metadata, admin info, and a Map of currently connected members.
+  - **Join Requests:** Users on the same IP can see groups and emit `request_join_group`. The server relays this to the group's admin for approval (`accept_group_join` / `reject_group_join`).
+  - **Message & File Relay:** Unlike private chat, group data is emitted to the server and broadcast to all members. This includes chunked file relay (`group_file_start`, `group_file_chunk`).
+  - **Auto-Cleanup:** If an admin disconnects, the group is automatically disbanded and all members are notified.
 
 ---
 
@@ -84,6 +91,13 @@ The UI component responsible for rendering the active P2P session.
 - **Message Rendering:** Maps over the `messages` array passed down from `useWebRTC`. Distinguishes between text messages and files.
 - **File Progress:** For incoming files, displays an animated progress bar based on the chunk reception percentage. For completed files, it renders images directly or provides a download link for other file types.
 - **Auto-Scrolling:** Uses a `useRef` pointing to the bottom of the message list to automatically scroll down whenever a new message arrives.
+
+### 3.5. Group Chat System (`GroupChatWindow.jsx`)
+A specialized component for multi-user collaboration.
+- **Admin Controls:** Only the creator (Admin) can see and respond to join requests, which appear as an inline notification bar within the chat interface.
+- **Member Management:** Features a toggleable panel showing all current members with their avatars and status.
+- **File Sharing:** Replicates the P2P chunking logic but relays data through the server using `group_file_start` and `group_file_chunk` events, ensuring all members receive the file stream simultaneously.
+- **Isolation:** Group chat state (`groupMessages`, `activeGroup`) is kept entirely separate from the WebRTC private chat state to prevent data leakage.
 
 ---
 
