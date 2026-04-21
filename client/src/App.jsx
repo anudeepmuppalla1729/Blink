@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext';
 import { useSocket } from './context/SocketContext';
 import { useWebRTC } from './hooks/useWebRTC';
 import ChatWindow from './components/Chat/ChatWindow';
+import GroupChatWindow from './components/Chat/GroupChatWindow';
 
 const compressImage = (file, callback) => {
   const reader = new FileReader();
@@ -54,6 +55,16 @@ function App() {
   const [activeChatUser, setActiveChatUser] = useState(null); 
 
   const [toasts, setToasts] = useState([]);
+
+  // ─── Group Chat State ───
+  const [availableGroups, setAvailableGroups] = useState([]);
+  const [activeGroup, setActiveGroup] = useState(null);
+  const [groupMessages, setGroupMessages] = useState([]);
+  const [groupJoinRequests, setGroupJoinRequests] = useState([]);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [pendingGroupJoin, setPendingGroupJoin] = useState(null);
+  const groupIncomingFiles = useRef({});
 
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('blink-theme');
@@ -151,6 +162,103 @@ function App() {
     };
   }, [socket, initiateConnection, showToast, cleanup]);
 
+  // ─── Group Chat Socket Listeners ───
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleGroupList = (groups) => setAvailableGroups(groups);
+
+    const handleGroupJoined = (data) => {
+      setActiveGroup(data);
+      setGroupMessages([]);
+      setPendingGroupJoin(null);
+      showToast(`Joined "${data.name}"`, 'success');
+    };
+
+    const handleGroupUpdated = ({ groupId, members, memberCount }) => {
+      setActiveGroup(prev => {
+        if (prev?.groupId === groupId) return { ...prev, members, memberCount };
+        return prev;
+      });
+    };
+
+    const handleGroupMessage = (msg) => {
+      setGroupMessages(prev => [...prev, msg]);
+    };
+
+    const handleGroupJoinRequest = (req) => {
+      setGroupJoinRequests(prev => [...prev, req]);
+    };
+
+    const handleGroupJoinRejected = ({ groupName }) => {
+      setPendingGroupJoin(null);
+      showToast(`Your request to join "${groupName}" was declined`, 'error');
+    };
+
+    const handleGroupDeleted = ({ reason }) => {
+      setActiveGroup(null);
+      setGroupMessages([]);
+      showToast(reason || 'Group was deleted', 'info');
+    };
+
+    socket.on('group_list', handleGroupList);
+    socket.on('group_joined', handleGroupJoined);
+    socket.on('group_updated', handleGroupUpdated);
+    socket.on('group_message', handleGroupMessage);
+    socket.on('group_join_request', handleGroupJoinRequest);
+    socket.on('group_join_rejected', handleGroupJoinRejected);
+    socket.on('group_deleted', handleGroupDeleted);
+
+    const handleGroupFileStart = (packet) => {
+      if (packet.senderId === user.id) return; // sender tracks locally
+      groupIncomingFiles.current[packet.fileId] = {
+        meta: packet, chunks: new Array(packet.totalChunks), receivedCount: 0,
+      };
+      setGroupMessages(prev => [...prev, {
+        senderId: packet.senderId, senderName: packet.senderName, senderAvatar: packet.senderAvatar,
+        fileId: packet.fileId, fileName: packet.fileName, fileType: packet.fileType,
+        status: 'downloading', progress: 0, type: 'file', ts: packet.ts,
+      }]);
+    };
+
+    const handleGroupFileChunk = (packet) => {
+      if (packet.senderId === user.id) return;
+      const fd = groupIncomingFiles.current[packet.fileId];
+      if (!fd) return;
+      fd.chunks[packet.chunkIndex] = packet.content;
+      fd.receivedCount++;
+      const progress = Math.round((fd.receivedCount / fd.meta.totalChunks) * 100);
+      setGroupMessages(prev => prev.map(m => m.fileId === packet.fileId ? { ...m, progress } : m));
+      if (fd.receivedCount === fd.meta.totalChunks) {
+        const byteArrays = fd.chunks.map(b64 => {
+          const bin = window.atob(b64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          return bytes;
+        });
+        const blob = new Blob(byteArrays, { type: fd.meta.fileType });
+        const url = URL.createObjectURL(blob);
+        setGroupMessages(prev => prev.map(m => m.fileId === packet.fileId ? { ...m, content: url, status: 'completed', progress: 100 } : m));
+        delete groupIncomingFiles.current[packet.fileId];
+      }
+    };
+
+    socket.on('group_file_start', handleGroupFileStart);
+    socket.on('group_file_chunk', handleGroupFileChunk);
+
+    return () => {
+      socket.off('group_list', handleGroupList);
+      socket.off('group_joined', handleGroupJoined);
+      socket.off('group_updated', handleGroupUpdated);
+      socket.off('group_message', handleGroupMessage);
+      socket.off('group_join_request', handleGroupJoinRequest);
+      socket.off('group_join_rejected', handleGroupJoinRejected);
+      socket.off('group_deleted', handleGroupDeleted);
+      socket.off('group_file_start', handleGroupFileStart);
+      socket.off('group_file_chunk', handleGroupFileChunk);
+    };
+  }, [socket, showToast, user]);
+
   useEffect(() => {
     setOnPeerClose(() => {
       showToast('Connection closed', 'info');
@@ -225,6 +333,88 @@ function App() {
     }
     cleanup();
     setActiveChatUser(null);
+  };
+
+  // ─── Group Chat Actions ───
+  const handleCreateGroup = () => {
+    if (!newGroupName.trim()) return showToast('Group name is required', 'error');
+    socket.emit('create_group', { name: newGroupName.trim() });
+    setNewGroupName('');
+    setShowCreateGroup(false);
+  };
+
+  const handleRequestJoinGroup = (groupId) => {
+    socket.emit('request_join_group', { groupId });
+    setPendingGroupJoin(groupId);
+    showToast('Join request sent', 'info');
+  };
+
+  const handleAcceptGroupJoin = (req) => {
+    socket.emit('accept_group_join', { groupId: req.groupId, userId: req.fromUserId });
+    setGroupJoinRequests(prev => prev.filter(r => r.fromUserId !== req.fromUserId || r.groupId !== req.groupId));
+  };
+
+  const handleRejectGroupJoin = (req) => {
+    socket.emit('reject_group_join', { groupId: req.groupId, userId: req.fromUserId });
+    setGroupJoinRequests(prev => prev.filter(r => r.fromUserId !== req.fromUserId || r.groupId !== req.groupId));
+  };
+
+  const CHUNK_SIZE = 16 * 1024;
+
+  const handleSendGroupMessage = (content, type = 'text') => {
+    if (!activeGroup || !socket) return;
+    if (type === 'file') {
+      handleSendGroupFile(content);
+    } else {
+      socket.emit('group_message', { groupId: activeGroup.groupId, content });
+    }
+  };
+
+  const handleSendGroupFile = async (file) => {
+    if (!activeGroup || !socket) return;
+    const groupId = activeGroup.groupId;
+    const fileId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+    socket.emit('group_file_start', { groupId, fileId, fileName: file.name, fileType: file.type, size: file.size, totalChunks });
+
+    setGroupMessages(prev => [...prev, {
+      senderId: 'me', fileId, fileName: file.name, fileType: file.type,
+      status: 'uploading', progress: 0, type: 'file', ts: Date.now(),
+    }]);
+
+    let offset = 0, chunkIndex = 0;
+    const readChunk = (start, end) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file.slice(start, end));
+    });
+
+    while (offset < file.size) {
+      try {
+        const chunkBase64 = await readChunk(offset, offset + CHUNK_SIZE);
+        socket.emit('group_file_chunk', { groupId, fileId, chunkIndex, content: chunkBase64 });
+        offset += CHUNK_SIZE;
+        chunkIndex++;
+        const progress = Math.round((chunkIndex / totalChunks) * 100);
+        setGroupMessages(prev => prev.map(m => m.fileId === fileId ? { ...m, progress } : m));
+        await new Promise(r => setTimeout(r, 5));
+      } catch (err) {
+        console.error('Group chunk send error', err);
+        break;
+      }
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    setGroupMessages(prev => prev.map(m => m.fileId === fileId ? { ...m, content: localUrl, status: 'completed', progress: 100 } : m));
+  };
+
+  const handleLeaveGroup = () => {
+    if (!activeGroup) return;
+    socket.emit('leave_group', { groupId: activeGroup.groupId });
+    setActiveGroup(null);
+    setGroupMessages([]);
   };
 
   // ─── Profile Form State ───
@@ -452,6 +642,73 @@ function App() {
               ))}
             </div>
           )}
+
+          {/* ─── Group Chats Section ─── */}
+          <div className="groups-section">
+            <div className="dashboard-header" style={{ marginTop: '2rem' }}>
+              <h2 className="dashboard-title">
+                Group Chats
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.5 }}>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </h2>
+              <button className="btn-create-group" onClick={() => setShowCreateGroup(!showCreateGroup)}>
+                {showCreateGroup ? 'Cancel' : '+ Create Group'}
+              </button>
+            </div>
+
+            {showCreateGroup && (
+              <div className="create-group-inline">
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Group name..."
+                  value={newGroupName}
+                  onChange={e => setNewGroupName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleCreateGroup()}
+                  autoFocus
+                />
+                <button className="btn-primary" style={{ width: 'auto', padding: '0.75rem 1.25rem' }} onClick={handleCreateGroup}>
+                  Create
+                </button>
+              </div>
+            )}
+
+            {availableGroups.length === 0 && !showCreateGroup ? (
+              <div className="empty-state" style={{ height: '120px' }}>
+                <p>No active groups on this network</p>
+              </div>
+            ) : (
+              <div className="users-grid">
+                {availableGroups.map(g => (
+                  <div key={g.groupId} className="user-card group-card">
+                    <div className="group-avatar-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                    </div>
+                    <div className="user-info">
+                      <div className="user-name">{g.name}</div>
+                      <div className="user-username">{g.memberCount} member{g.memberCount !== 1 ? 's' : ''} · by {g.adminName}</div>
+                    </div>
+                    {g.adminId === user.id ? (
+                      <button className="btn-connect" style={{ backgroundColor: 'var(--accent)', color: 'var(--text-inverse)' }} onClick={() => {
+                        socket.emit('request_join_group', { groupId: g.groupId });
+                        setActiveGroup({ groupId: g.groupId, name: g.name, adminId: g.adminId, members: [], isAdmin: true });
+                        setGroupMessages([]);
+                      }}>Open</button>
+                    ) : activeGroup?.groupId === g.groupId ? (
+                      <button className="btn-connect" style={{ backgroundColor: 'var(--accent)', color: 'var(--text-inverse)' }}>Joined</button>
+                    ) : pendingGroupJoin === g.groupId ? (
+                      <button disabled className="btn-waiting"><span className="spinner"></span>Pending</button>
+                    ) : (
+                      <button onClick={() => handleRequestJoinGroup(g.groupId)} className="btn-connect">Join</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </main>
       ) : (
         <main className="dashboard-main">
@@ -536,6 +793,20 @@ function App() {
           onClose={handleCloseChat} 
           peer={activeChatUser}
           isConnected={isConnected}
+        />
+      )}
+
+      {/* Group Chat Window */}
+      {activeGroup && (
+        <GroupChatWindow
+          group={activeGroup}
+          messages={groupMessages}
+          onSend={handleSendGroupMessage}
+          onLeave={handleLeaveGroup}
+          currentUserId={user.id}
+          joinRequests={groupJoinRequests}
+          onAcceptJoin={handleAcceptGroupJoin}
+          onRejectJoin={handleRejectGroupJoin}
         />
       )}
     </div>
